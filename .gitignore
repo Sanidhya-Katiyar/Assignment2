@@ -1,0 +1,12 @@
+data/AID/
+outputs/
+*.pt
+*.pth
+*.ckpt
+*.log
+*.csv
+*.png
+*.jpg
+*.jpeg
+__pycache__/
+.ipynb_checkpoints/
