@@ -1,11 +1,12 @@
-torch
-torchvision
-timm
-numpy
-pandas
-scikit-learn
-matplotlib
-seaborn
-tqdm
-ptflops
-opencv-python
+# Core deep learning
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Config parsing
+pyyaml>=6.0
+
+# Scientific computing
+numpy>=1.24.0
+
+# Image I/O (PIL backend for torchvision)
+Pillow>=9.0.0

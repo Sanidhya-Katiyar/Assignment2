@@ -1,0 +1,21 @@
+# configs/baseline.yaml
+# ──────────────────────────────────────────────────────────────────────
+# Baseline configuration for the AID transfer-learning project.
+# All paths are relative to the project root unless absolute paths are given.
+# ──────────────────────────────────────────────────────────────────────
+
+# ── Dataset ──────────────────────────────────────────────────────────
+dataset_path: data/AID           # Root directory of the AID dataset
+image_size:   224                # Resize all images to (image_size × image_size)
+
+# ── Data loading ─────────────────────────────────────────────────────
+batch_size:   32                 # Mini-batch size for all DataLoaders
+num_workers:  4                  # Parallel worker processes (set 0 on Windows)
+
+# ── Splits ───────────────────────────────────────────────────────────
+train_split: 0.70                # 70 % of data → training
+val_split:   0.15                # 15 % of data → validation
+test_split:  0.15                # 15 % of data → test
+
+# ── Reproducibility ──────────────────────────────────────────────────
+seed: 42
