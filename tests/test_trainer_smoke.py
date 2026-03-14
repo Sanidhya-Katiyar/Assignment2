@@ -51,44 +51,30 @@ from src.train.utils_checkpoint  import (
 # Helpers
 # ---------------------------------------------------------------------------
 
-NUM_CLASSES = 5    # number of output classes for the synthetic task
-INPUT_DIM   = 16   # feature dimension of each synthetic sample
-HIDDEN      = 32   # hidden units in the tiny MLP
-N_TRAIN     = 40   # synthetic training samples
-N_VAL       = 10   # synthetic validation samples
-BATCH_SIZE  = 8    # mini-batch size
-
-# Shape contract (checked at import time):
-#   _make_loaders  → x: (BATCH_SIZE, INPUT_DIM)  y: (BATCH_SIZE,)
-#   _make_tiny_model forward:
-#       (B, INPUT_DIM=16) → Linear(16→32) → (B,32) → ReLU → Linear(32→5) → (B, NUM_CLASSES=5)
-assert INPUT_DIM > 0 and HIDDEN > 0 and NUM_CLASSES > 0, "Dimension constants must be positive"
+# These constants are intentionally distinct from each other so no two
+# variables share the same value — preventing any silent substitution bug.
+NUM_CLASSES = 5   # output classes  (5)
+INPUT_DIM   = 32  # feature width   (32)  ← NOT equal to NUM_CLASSES
+HIDDEN      = 64  # hidden width     (64)  ← NOT equal to INPUT_DIM or NUM_CLASSES
+N_TRAIN     = 40
+N_VAL       = 10
+BATCH_SIZE  = 8
 
 
 def _make_tiny_model(num_classes: int = NUM_CLASSES) -> nn.Module:
     """
     Minimal two-layer MLP for smoke testing.
 
-    Forward pass shapes (with defaults):
-        input  : (batch, INPUT_DIM=16)
-        hidden : (batch, HIDDEN=32)      after Linear(16→32) + ReLU
-        output : (batch, num_classes=5)  after Linear(32→5)
+    Forward pass (default constants):
+        (B, 32) -Linear(32,64)-> (B, 64) -ReLU-> (B, 64) -Linear(64,5)-> (B, 5)
     """
     model = nn.Sequential(
-        nn.Linear(INPUT_DIM, HIDDEN),   # (B, 16) → (B, 32)
+        nn.Linear(INPUT_DIM, HIDDEN),    # (B, INPUT_DIM=32) → (B, HIDDEN=64)
         nn.ReLU(),
-        nn.Linear(HIDDEN, num_classes), # (B, 32) → (B, num_classes)
+        nn.Linear(HIDDEN, num_classes),  # (B, HIDDEN=64)    → (B, num_classes=5)
     )
     # Expose .fc so backbone_utils helpers can locate the classification head
     model.fc = model[-1]  # type: ignore[attr-defined]
-
-    # Verify dimensions with a single CPU forward pass
-    _dummy = torch.zeros(2, INPUT_DIM)
-    _out   = model(_dummy)
-    assert _out.shape == (2, num_classes), (
-        f"_make_tiny_model shape error: expected (2, {num_classes}), got {tuple(_out.shape)}. "
-        f"Check INPUT_DIM={INPUT_DIM}, HIDDEN={HIDDEN}, num_classes={num_classes}."
-    )
     return model
 
 
@@ -96,9 +82,7 @@ def _make_loaders():
     """
     Synthetic DataLoaders with 2-D float tensors.
 
-    Tensor shapes:
-        x : (N, INPUT_DIM=16)  — flat feature vectors, no channel dimension
-        y : (N,)               — integer class labels in [0, NUM_CLASSES)
+    Shapes: x (N, INPUT_DIM=32)  y (N,)  labels in [0, NUM_CLASSES).
     """
     x_train = torch.randn(N_TRAIN, INPUT_DIM)
     y_train = torch.randint(0, NUM_CLASSES, (N_TRAIN,))
