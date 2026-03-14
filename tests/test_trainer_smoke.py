@@ -51,29 +51,33 @@ from src.train.utils_checkpoint  import (
 # Helpers
 # ---------------------------------------------------------------------------
 
-# These constants are intentionally distinct from each other so no two
-# variables share the same value — preventing any silent substitution bug.
-NUM_CLASSES = 5   # output classes  (5)
-INPUT_DIM   = 32  # feature width   (32)  ← NOT equal to NUM_CLASSES
-HIDDEN      = 64  # hidden width     (64)  ← NOT equal to INPUT_DIM or NUM_CLASSES
+# Documentation-only constants (not referenced inside function bodies —
+# all functions use literals so they are immune to .pyc constant-table bugs).
+NUM_CLASSES = 5    # output classes
+INPUT_DIM   = 32   # synthetic feature width   (≠ NUM_CLASSES, ≠ HIDDEN)
+HIDDEN      = 64   # MLP hidden width          (≠ NUM_CLASSES, ≠ INPUT_DIM)
 N_TRAIN     = 40
 N_VAL       = 10
 BATCH_SIZE  = 8
 
 
-def _make_tiny_model(num_classes: int = NUM_CLASSES) -> nn.Module:
+def _make_tiny_model(num_classes: int = 5) -> nn.Module:
     """
     Minimal two-layer MLP for smoke testing.
 
-    Forward pass (default constants):
-        (B, 32) -Linear(32,64)-> (B, 64) -ReLU-> (B, 64) -Linear(64,5)-> (B, 5)
+    Architecture (literals, not module constants):
+        Linear(32, 64) -> ReLU -> Linear(64, num_classes=5)
+
+    Forward shapes:
+        input  : (batch, 32)
+        hidden : (batch, 64)
+        output : (batch, 5)
     """
     model = nn.Sequential(
-        nn.Linear(INPUT_DIM, HIDDEN),    # (B, INPUT_DIM=32) → (B, HIDDEN=64)
+        nn.Linear(32, 64),          # in=32, out=64
         nn.ReLU(),
-        nn.Linear(HIDDEN, num_classes),  # (B, HIDDEN=64)    → (B, num_classes=5)
+        nn.Linear(64, num_classes), # in=64, out=5
     )
-    # Expose .fc so backbone_utils helpers can locate the classification head
     model.fc = model[-1]  # type: ignore[attr-defined]
     return model
 
@@ -82,17 +86,20 @@ def _make_loaders():
     """
     Synthetic DataLoaders with 2-D float tensors.
 
-    Shapes: x (N, INPUT_DIM=32)  y (N,)  labels in [0, NUM_CLASSES).
+    Uses literals throughout (not module-level constants) so the function
+    is unaffected by any cached bytecode that might have stale constant values.
+
+    Shapes: x (N, 32)  y (N,) labels in [0, 5).
     """
-    x_train = torch.randn(N_TRAIN, INPUT_DIM)
-    y_train = torch.randint(0, NUM_CLASSES, (N_TRAIN,))
-    x_val   = torch.randn(N_VAL,   INPUT_DIM)
-    y_val   = torch.randint(0, NUM_CLASSES, (N_VAL,))
+    x_train = torch.randn(40, 32)        # 40 samples, 32 features
+    y_train = torch.randint(0, 5, (40,)) # labels in [0, 5)
+    x_val   = torch.randn(10, 32)
+    y_val   = torch.randint(0, 5, (10,))
 
     train_ds = TensorDataset(x_train, y_train)
     val_ds   = TensorDataset(x_val,   y_val)
-    train_ld = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True)
-    val_ld   = DataLoader(val_ds,   batch_size=BATCH_SIZE, shuffle=False)
+    train_ld = DataLoader(train_ds, batch_size=8, shuffle=True)
+    val_ld   = DataLoader(val_ds,   batch_size=8, shuffle=False)
     return train_ld, val_ld
 
 
