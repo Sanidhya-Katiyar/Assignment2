@@ -1,0 +1,36 @@
+# configs/finetune.yaml
+# ──────────────────────────────────────────────────────────────────────
+# Fine-tuning configuration for the AID transfer-learning project.
+# Values here are intended for fine-tune experiments (lower LR than probe).
+# ──────────────────────────────────────────────────────────────────────
+
+# ── Dataset ──────────────────────────────────────────────────────────
+dataset_path: data/AID
+image_size:   224
+
+# ── Data loading ─────────────────────────────────────────────────────
+batch_size:   32
+num_workers:  4
+
+# ── Splits ───────────────────────────────────────────────────────────
+train_split: 0.70
+val_split:   0.15
+test_split:  0.15
+
+# ── Reproducibility ──────────────────────────────────────────────────
+seed: 42
+
+# ── Training ─────────────────────────────────────────────────────────
+epochs:       30
+lr_probe:     1.0e-3    # head LR for linear probe
+lr_finetune:  1.0e-4    # head LR for fine-tune experiments
+lr_backbone:  1.0e-5    # backbone LR when unfrozen
+weight_decay: 1.0e-4
+optimizer:    adamw
+scheduler:    cosine
+patience:     10        # early-stopping patience (0 = disabled)
+max_grad_norm: 1.0
+
+# ── Misc ─────────────────────────────────────────────────────────────
+amp:         false      # set true to enable mixed-precision on GPU
+num_classes: 30
