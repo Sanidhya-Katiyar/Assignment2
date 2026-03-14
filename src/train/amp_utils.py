@@ -22,7 +22,7 @@ import torch.nn as nn
 # GradScaler factory
 # ---------------------------------------------------------------------------
 
-def make_scaler(enabled: bool) -> torch.cuda.amp.GradScaler:
+def make_scaler(enabled: bool) -> torch.amp.GradScaler:
     """
     Return a ``GradScaler`` (a no-op one when *enabled* is ``False``).
 
@@ -35,7 +35,7 @@ def make_scaler(enabled: bool) -> torch.cuda.amp.GradScaler:
     Returns:
         A ``torch.cuda.amp.GradScaler`` instance.
     """
-    return torch.cuda.amp.GradScaler(enabled=enabled)
+    return torch.amp.GradScaler("cuda", enabled=enabled)
 
 
 # ---------------------------------------------------------------------------

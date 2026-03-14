@@ -62,7 +62,6 @@ BATCH_SIZE    = 8
 def _make_tiny_model(num_classes: int = NUM_CLASSES) -> nn.Module:
     """Two-layer MLP for smoke testing."""
     model = nn.Sequential(
-        nn.Flatten(),
         nn.Linear(INPUT_DIM, HIDDEN),
         nn.ReLU(),
         nn.Linear(HIDDEN, num_classes),
@@ -74,9 +73,9 @@ def _make_tiny_model(num_classes: int = NUM_CLASSES) -> nn.Module:
 
 def _make_loaders():
     """Synthetic random tensors wrapped in DataLoaders."""
-    x_train = torch.randn(N_TRAIN, 1, INPUT_DIM)
+    x_train = torch.randn(N_TRAIN, INPUT_DIM)
     y_train = torch.randint(0, NUM_CLASSES, (N_TRAIN,))
-    x_val   = torch.randn(N_VAL, 1, INPUT_DIM)
+    x_val   = torch.randn(N_VAL, INPUT_DIM)
     y_val   = torch.randint(0, NUM_CLASSES, (N_VAL,))
 
     train_ds = TensorDataset(x_train, y_train)
@@ -268,16 +267,19 @@ def test_append_best_results():
         with csv_path.open() as fh:
             rows = list(csv.DictReader(fh))
         assert len(rows) == 2
-        assert float(rows[0]["best_val_acc"]) == pytest_approx(87.3, abs=1e-3)
+        assert float(rows[0]["best_val_acc"]) == pytest_approx(87.3, tol=1e-3)
         print("  [PASS] test_append_best_results")
 
 
-def pytest_approx(val, abs=1e-6):
+def pytest_approx(val, tol=1e-3):
     """Simple approx helper for running without pytest."""
     class _Approx:
+        def __init__(self, val, tol):
+            self.val = val
+            self.tol = tol
         def __eq__(self, other):
-            return abs(other - val) < abs
-    return _Approx()
+            return abs(other - self.val) < self.tol
+    return _Approx(val, tol)
 
 
 # ---------------------------------------------------------------------------
