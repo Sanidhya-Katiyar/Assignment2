@@ -1,5 +1,4 @@
 data/AID/
-outputs/
 *.pt
 *.pth
 *.ckpt
